@@ -1,0 +1,47 @@
+//------------------------------------------------
+//--- 010 Editor v11.0.1 Binary Template
+//
+//      File: 
+//   Authors: MHVuze
+//   Version: 
+//   Purpose: MH Rise via.gui.FontSlotResource
+//  Category: 
+// File Mask: *.fslt.2
+//  ID Bytes: 
+//   History: 
+//------------------------------------------------
+local int i;
+local int pos;
+
+struct Header {
+    int version;
+    char magic[4];
+};
+
+struct PointerMap {
+    int64 pointer[16];
+};
+
+struct DataEntry {
+    int64 null;
+    float character_scaling_x;
+    float character_scaling_y;
+    int64 offset_path;
+
+    pos = FTell();
+    FSeek(offset_path);
+    wstring path;
+    FSeek(pos);
+};
+
+struct Dir {
+    int64 count;
+    DataEntry entry[count]<optimize=false>;
+};
+
+Header header;
+PointerMap pointermap;
+for(i = 0; i < 16; i++) {
+    FSeek(pointermap.pointer[i]);
+    Dir dir;
+};
