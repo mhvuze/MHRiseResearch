@@ -27,11 +27,11 @@ struct Header {
     int64 hashBlocksStartOffset;
     int64 hashBlocksTotalLength;
     int64 hashBlocksTotalCount;
-    int64 hashBlockStartOffset[hashBlocksTotalCount]; // not sure where i got that from?
+    int64 hashBlockStartOffset[hashBlocksTotalCount];
 };
 
 struct AttributeEntry {
-    byte divider[4]; // FF FF FF FF
+    byte divider[4]; // FF FF FF FF usually
     int64 namePointer<hidden=true>;
     
     pos = FTell();
@@ -169,11 +169,11 @@ struct AttributeEntry {
 
 struct AttributeBlock {
     int64 entryCount;
-    int unk; // 0x0D?
+    int unk; // always 0x0D?
     AttributeEntry entry[entryCount]<optimize=false>;
 };
 
-struct HashBlock_int(int hash) { // padded; seen 48
+struct HashBlock_int(int hash) { // padded
     byte hash[hash]<hidden=true>;
     int64 elementPointer<hidden=true>;
     int64 functionPointer<hidden=true>;
@@ -220,7 +220,7 @@ struct BehaviorBlock {
 };
 
 struct HashBlock { // padded
-    byte hash[16]<hidden=true>; // hash? seen 16, 32, 48 bytes
+    byte hash[16]<hidden=true>;
     int64 elementNamePointer<hidden=true>;
     int64 functionNamePointer<hidden=true>;
 
@@ -240,7 +240,7 @@ struct HashBlock { // padded
 
     FSeek(behaviorBlockCountPointer);
     int32 behaviorBlockCount1;
-    int32 behaviorBlockCount2; // identical with 1?
+    int32 behaviorBlockCount2; // always identical with 1?
     int64 behaviorBlockOffset[behaviorBlockCount1];
 
     pos_main = FTell();
@@ -262,4 +262,4 @@ for (j = 0; j < header.hashBlocksTotalCount; j++) {
     HashBlock hashBlock<bgcolor=0x2ffcaa, optimize=false>;
 };
 FSeek(pos_main);
-HashBlock_int hashBlock(48)<bgcolor=0x72fc2a>;
+HashBlock_int viewBlock(48)<bgcolor=0x72fc2a>;
