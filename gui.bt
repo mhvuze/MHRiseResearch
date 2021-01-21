@@ -1,0 +1,208 @@
+//------------------------------------------------
+//--- 010 Editor v11.0.1 Binary Template
+//
+//      File: 
+//   Authors: MHVuze
+//   Version: 
+//   Purpose: MH Rise via.gui.GUIResource
+//  Category: 
+// File Mask: *.gui.400022
+//  ID Bytes: 
+//   History: 
+//------------------------------------------------
+local int pos;
+local int pos_main;
+local int pos_sub;
+local int i;
+local int j;
+
+struct Header {
+    byte identifier[4]<hidden=true>;
+    char magic[4];
+    int64 hashBlocksMetaPointer; // maybe?
+    int64 unk2;
+    int64 unk3;
+    int64 unk4;
+    int64 unk5;
+    int64 hashBlocksStartOffset;
+    int64 hashBlocksTotalLength;
+    int64 hashBlocksTotalCount;
+    int64 hashBlockStartOffset[hashBlocksTotalCount]; // not sure where i got that from?
+};
+
+struct AttributeEntry {
+    byte divider[4]; // FF FF FF FF
+    int64 namePointer<hidden=true>;
+    
+    pos = FTell();
+    FSeek(namePointer);
+    string name;
+    FSeek(pos);
+
+    int64 data;
+    // dataType seems inconsistent, i.e. 14 is used for double and single float
+    // dataType also apparently gives no indication as to whether data is an actual value or offset, just which type is expected
+    int dataType;
+
+    // the following is mostly unconfirmed
+    pos = FTell();
+    FSeek(pos - 12);
+    switch(name) {
+        // very uncertain about this one, the extra data might just be something else?
+        case "AnimationCommand":
+            if (dataType == 2) {
+                int32 unk[2];
+            };
+            break;
+        case "BaseFps":
+        case "Saturation":
+            double value;
+            break;
+        case "ColorScale":
+            pos_sub = ReadInt64();
+            FSeek(pos_sub);
+            float Scale_1;
+            float Scale_2;
+            float Scale_3;
+            float Scale_4;
+            break;
+        case "Name":
+            pos_sub = ReadInt64();
+            FSeek(pos_sub);
+            wstring value;
+            break;
+        // very uncertain about this one, the extra data might just be something else?
+        case "PlayState":
+        case "UVSequenceNo":
+            if (dataType == 1) {
+                FSeek(pos);
+                int32 unk1[3];
+                int64 unk2[2];
+            };
+            break;
+        case "Scale":
+            pos_sub = ReadInt64();
+            FSeek(pos_sub);
+            float Scale_X;
+            float Scale_Y;
+            float Scale_Z;
+            break;
+        case "ScreenSize":
+            pos_sub = ReadInt64();
+            FSeek(pos_sub);
+            float ScreenSize_X;
+            float ScreenSize_Y;
+            break;
+        // very uncertain about this one, the extra data might just be something else?
+        case "UVPatternNo":
+        case "UVSequence":
+            if (dataType == 2) {
+                FSeek(pos);
+                int32 unk1[3];
+                int64 unk2[2];
+                int32 unk3[2];
+                int64 unk4[2];
+            };
+            break;
+        default:
+            break;
+    };
+    FSeek(pos);
+};
+
+struct AttributeBlock {
+    int64 entryCount;
+    int unk; // 0x0D?
+    AttributeEntry entry[entryCount]<optimize=false>;
+};
+
+struct HashBlock_int(int hash) { // padded; seen 48
+    byte hash[hash]<hidden=true>;
+    int64 elementPointer<hidden=true>;
+    int64 functionPointer<hidden=true>;
+    int64 attributeBlockPointer;
+    int64 unk1;
+
+    FSeek(elementPointer);
+    wstring elementName;
+    FSeek(functionPointer);
+    string functionName;
+
+    FSeek(attributeBlockPointer);
+    AttributeBlock attributeBlock;
+};
+
+struct BehaviorBlock {
+    byte hash[16]<hidden=true>;
+    int64 pad1; // maybe
+    int64 behaviorNamePointer<hidden=true>;
+    int64 pad2; // maybe
+    char clip[4]; // ??
+    int32 unk1;
+    float unk2;
+    int32 unk3;
+    int64 pad3; // maybe
+    int64 unk[12];
+
+    byte hash2[8];
+    int64 pad4; // maybe
+    int64 unk4;
+    int64 pad5; // maybe
+    int64 pad6; // maybe
+    
+    byte hash3[8];
+    int64 someCount;
+    int64 pad7; // maybe
+    int64 pad8; // maybe
+    
+    wstring className;
+    wstring elementName;
+
+    FSeek(behaviorNamePointer);
+    wstring behaviorName;
+};
+
+struct HashBlock { // padded
+    byte hash[16]<hidden=true>; // hash? seen 16, 32, 48 bytes
+    int64 elementNamePointer<hidden=true>;
+    int64 functionNamePointer<hidden=true>;
+
+    pos = FTell();
+    FSeek(elementNamePointer);
+    wstring elementName;
+    FSeek(functionNamePointer);
+    string functionName;
+    FSeek(pos);
+
+    int64 subBlockCountPointer;
+    int64 behaviorBlockCountPointer;
+
+    FSeek(subBlockCountPointer);
+    int64 subBlockCount;
+    int64 subBlockOffset[subBlockCount];
+
+    FSeek(behaviorBlockCountPointer);
+    int32 behaviorBlockCount1;
+    int32 behaviorBlockCount2; // identical with 1?
+    int64 behaviorBlockOffset[behaviorBlockCount1];
+
+    pos_main = FTell();
+
+    for (i = 0; i < subBlockCount; i++) {
+        FSeek(subBlockOffset[i]);
+        HashBlock_int subBlock(48)<bgcolor=0x5fccaa>;
+    };
+
+    for (i = 0; i < behaviorBlockCount1; i++) {
+        FSeek(behaviorBlockOffset[i]);
+        BehaviorBlock behavior<bgcolor=0x8fccaa>;
+    };
+};
+
+Header header<bgcolor=0xadcdad>;
+for (j = 0; j < header.hashBlocksTotalCount; j++) {
+    FSeek(header.hashBlockStartOffset[j]);
+    HashBlock hashBlock<bgcolor=0x2ffcaa, optimize=false>;
+};
+FSeek(pos_main);
+HashBlock_int hashBlock(48)<bgcolor=0x72fc2a>;
