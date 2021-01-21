@@ -40,38 +40,102 @@ struct AttributeEntry {
     FSeek(pos);
 
     int64 data;
-    // dataType seems inconsistent, i.e. 14 is used for double and single float
-    // dataType also apparently gives no indication as to whether data is an actual value or offset, just which type is expected
+    // it appears that dataType and name need to be combined for accuracy...
     int dataType;
 
     // the following is mostly unconfirmed
     pos = FTell();
     FSeek(pos - 12);
     switch(name) {
-        // very uncertain about this one, the extra data might just be something else?
-        case "AnimationCommand":
-            if (dataType == 2) {
-                int32 unk[2];
-            };
-            break;
-        case "BaseFps":
-        case "Saturation":
-            double value;
-            break;
-        case "ColorScale":
+        // *** STRING ***
+        case "AssetType":
+        case "AutoRegionFit":
+        case "BlendType":
+        case "ColorType":
+        case "ControlPoint":
+        case "EffectAlphaType":
+        case "FontSlot":
+        case "IconColorType":
+        case "LetterAlignment":
+        case "MaskMode":
+        case "MaskType":
+        case "MessageType":
+        case "PageAlignment":
+        case "ReprojectionType":
+        case "SamplerType":
+        case "Segment":
+        case "ToolViewType":
+        case "TypingCommand":
+        case "ViewType":
             pos_sub = ReadInt64();
             FSeek(pos_sub);
-            float Scale_1;
-            float Scale_2;
-            float Scale_3;
-            float Scale_4;
+            string value;
             break;
         case "Name":
             pos_sub = ReadInt64();
             FSeek(pos_sub);
             wstring value;
             break;
-        // very uncertain about this one, the extra data might just be something else?
+        // *** INT ***
+        case "Color":
+            pos_sub = ReadInt64();
+            FSeek(pos_sub);
+            int32 value;
+            break;
+        // *** FLOAT ***
+        case "FontSize":
+        case "GlowBlurSize":
+        case "RasterSize":
+        case "ScreenSize":
+        case "ShadowBlurSize":
+        case "Size":
+            pos_sub = ReadInt64();
+            FSeek(pos_sub);
+            float value1;
+            float value2;
+            break;
+        case "Position":
+        case "Rotation":
+        case "Scale":
+            pos_sub = ReadInt64();
+            FSeek(pos_sub);
+            float value1;
+            float value2;
+            float value3;
+            break;
+        case "ColorScale":
+        case "RegionSize":
+        case "ScissorRect":
+            pos_sub = ReadInt64();
+            FSeek(pos_sub);
+            float value1;
+            float value2;
+            float value3;
+            float value4;
+            break;
+        // *** DOUBLE ***
+        case "BaseFps":
+        case "GlowStrength":
+        case "Saturation":
+        case "ShadowDistance":
+        case "ShadowDistanceZ":
+        case "ShadowRotation":
+        case "ShadowStrength":
+        case "TypingTime":
+            double value;
+            break;
+        // *** UNCERTAIN, DATA EXCEEDING TEMPLATE ***
+        case "AnimationCommand":
+            if (dataType == 2) {
+                int32 unk[2];
+            }
+            else if (dataType == 1) {
+                pos_sub = ReadInt64();
+                FSeek(pos_sub);
+                string value;
+                break;
+            };
+            break;
         case "PlayState":
         case "UVSequenceNo":
             if (dataType == 1) {
@@ -80,20 +144,6 @@ struct AttributeEntry {
                 int64 unk2[2];
             };
             break;
-        case "Scale":
-            pos_sub = ReadInt64();
-            FSeek(pos_sub);
-            float Scale_X;
-            float Scale_Y;
-            float Scale_Z;
-            break;
-        case "ScreenSize":
-            pos_sub = ReadInt64();
-            FSeek(pos_sub);
-            float ScreenSize_X;
-            float ScreenSize_Y;
-            break;
-        // very uncertain about this one, the extra data might just be something else?
         case "UVPatternNo":
         case "UVSequence":
             if (dataType == 2) {
@@ -102,6 +152,13 @@ struct AttributeEntry {
                 int64 unk2[2];
                 int32 unk3[2];
                 int64 unk4[2];
+            }
+            // seen for UVSequence
+            else if (dataType == 7) {
+                pos_sub = ReadInt64();
+                FSeek(pos_sub);
+                wstring value;
+                break;
             };
             break;
         default:
